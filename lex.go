@@ -74,15 +74,16 @@ func (l *lexer) scan() {
 		} else {
 			l.token(tokSym)
 		}
-	case ' ', '\t', '\r':
-	case '\n':
-		l.line++
 	default:
 		switch {
 		case unicode.IsDigit(r):
 			l.number()
 		case unicode.IsLetter(r):
 			l.ident()
+		case unicode.IsSpace(r):
+			if r == '\n' {
+				l.line++
+			}
 		default:
 			l.token(tokSym)
 		}
