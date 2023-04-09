@@ -5,16 +5,16 @@ import (
 	"unicode"
 )
 
-type tokType byte
+type tokType string
 
 const (
-	tokLParen tokType = iota
-	tokRParen
-	tokNum
-	tokId
-	tokSym
-	tokStr
-	tokEof
+	tokLParen tokType = "("
+	tokRParen         = ")"
+	tokNum            = "num"
+	tokId             = "id"
+	tokSym            = "sym"
+	tokStr            = "str"
+	tokEof            = "eof"
 )
 
 type token struct {
@@ -150,7 +150,7 @@ func (l *lexer) eof() bool {
 
 func (l *lexer) next() rune {
 	defer func() { l.curr++ }()
-	return l.runes[l.curr]
+	return l.peek()
 }
 
 func (l *lexer) peek() rune {
