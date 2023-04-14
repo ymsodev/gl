@@ -9,13 +9,22 @@ type tokType string
 
 const (
 	tokLParen tokType = "("
-	tokRParen         = ")"
-	tokNum            = "num"
-	tokId             = "id"
-	tokSym            = "sym"
-	tokStr            = "str"
-	tokEof            = "eof"
+	tokRParen tokType = ")"
+	tokNum    tokType = "num"
+	tokId     tokType = "id"
+	tokSym    tokType = "sym"
+	tokStr    tokType = "str"
+	tokNil    tokType = "nil"
+	tokTrue   tokType = "true"
+	tokFalse  tokType = "false"
+	tokEof    tokType = "eof"
 )
+
+var keywords = map[string]tokType{
+	"nil":   tokNil,
+	"true":  tokTrue,
+	"false": tokFalse,
+}
 
 type token struct {
 	typ   tokType
@@ -131,7 +140,11 @@ func (l *lexer) ident() {
 	for !l.eof() && valid(l.peek()) {
 		l.next()
 	}
-	l.token(tokId)
+	typ := tokId
+	if k, ok := keywords[l.text()]; ok {
+		typ = k
+	}
+	l.token(typ)
 }
 
 func (l *lexer) token(typ tokType) {

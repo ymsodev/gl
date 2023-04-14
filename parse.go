@@ -5,7 +5,7 @@ import (
 )
 
 type expr interface {
-	eval()
+	eval(e *evaluator) (any, error)
 }
 
 type list struct {
@@ -14,16 +14,16 @@ type list struct {
 	items  []expr
 }
 
-func (l *list) eval() {
-
+func (l *list) eval(e *evaluator) (any, error) {
+	return e.evalList(l)
 }
 
 type atom struct {
 	tok *token
 }
 
-func (a *atom) eval() {
-
+func (a *atom) eval(e *evaluator) (any, error) {
+	return e.evalAtom(a)
 }
 
 func parse(tokens []*token) ([]expr, error) {
