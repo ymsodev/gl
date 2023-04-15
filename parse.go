@@ -37,7 +37,7 @@ func (p *parser) expr() (expr, error) {
 	switch t := p.peek(); t.typ {
 	case tokLParen:
 		return p.list()
-	case tokNum, tokId, tokSym, tokStr:
+	case tokNum, tokSym, tokStr:
 		return p.atom(), nil
 	default:
 		return nil, fmt.Errorf("unexpected token: %s", t.typ)
