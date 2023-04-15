@@ -11,7 +11,6 @@ const (
 	tokLParen tokType = "("
 	tokRParen tokType = ")"
 	tokNum    tokType = "num"
-	tokId     tokType = "id"
 	tokSym    tokType = "sym"
 	tokStr    tokType = "str"
 	tokNil    tokType = "nil"
@@ -140,7 +139,7 @@ func (l *lexer) ident() {
 	for !l.eof() && valid(l.peek()) {
 		l.next()
 	}
-	typ := tokId
+	typ := tokSym
 	if k, ok := keywords[l.text()]; ok {
 		typ = k
 	}

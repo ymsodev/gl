@@ -4,28 +4,6 @@ import (
 	"fmt"
 )
 
-type expr interface {
-	eval(e *evaluator) (any, error)
-}
-
-type list struct {
-	lparen *token
-	rparen *token
-	items  []expr
-}
-
-func (l *list) eval(e *evaluator) (any, error) {
-	return e.evalList(l)
-}
-
-type atom struct {
-	tok *token
-}
-
-func (a *atom) eval(e *evaluator) (any, error) {
-	return e.evalAtom(a)
-}
-
 func parse(tokens []*token) ([]expr, error) {
 	return newParser(tokens).parse()
 }

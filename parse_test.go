@@ -19,7 +19,7 @@ func TestParse(t *testing.T) {
 				{tokLParen, 0, 0, 1, "("},
 				{tokSym, 0, 1, 2, "+"},
 				{tokNum, 0, 2, 5, "123"},
-				{tokId, 0, 5, 10, "hello"},
+				{tokSym, 0, 5, 10, "hello"},
 				{tokRParen, 0, 10, 11, ")"},
 				{tokEof, 0, 11, 11, ""},
 			},
@@ -30,7 +30,7 @@ func TestParse(t *testing.T) {
 					items: []expr{
 						&atom{&token{tokSym, 0, 1, 2, "+"}},
 						&atom{&token{tokNum, 0, 2, 5, "123"}},
-						&atom{&token{tokId, 0, 5, 10, "hello"}},
+						&atom{&token{tokSym, 0, 5, 10, "hello"}},
 					},
 				},
 			},

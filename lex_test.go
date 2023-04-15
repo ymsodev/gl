@@ -30,7 +30,7 @@ func TestLex(t *testing.T) {
 			"1234.5678 hello-world",
 			[]*token{
 				{tokNum, 0, 0, 9, "1234.5678"},
-				{tokId, 0, 10, 21, "hello-world"},
+				{tokSym, 0, 10, 21, "hello-world"},
 				{tokEof, 0, 21, 21, ""},
 			},
 		},

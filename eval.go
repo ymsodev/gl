@@ -1,13 +1,22 @@
 package gl
 
-import "strconv"
+import (
+	"fmt"
+	"strconv"
+)
 
 type evaluator struct {
 	env map[string]any
 }
 
 func newEvaluator() *evaluator {
-	return &evaluator{make(map[string]any)}
+	return &evaluator{
+		env: map[string]any{
+			"+": func() {
+
+			}
+		},
+	}
 }
 
 func (e *evaluator) eval(expr expr) (any, error) {
@@ -25,7 +34,11 @@ func (e *evaluator) evalAtom(a *atom) (any, error) {
 	case tokNum:
 		return strconv.ParseFloat(a.tok.text, 64)
 	case tokSym, tokId:
-		return e.env[a.tok.text], nil
+		val, ok := e.env[a.tok.text]
+		if !ok {
+			return nil, fmt.Errorf("undefined symbol: %s", a.tok.text)		
+		}
+		return val, nil
 	case tokStr:
 		return a.tok.text[1 : len(a.tok.text)-1], nil
 	case tokNil:
@@ -39,8 +52,18 @@ func (e *evaluator) evalAtom(a *atom) (any, error) {
 }
 
 func (e *evaluator) evalList(l *list) (any, error) {
+	if len(l.items) == 0 {
+		return nil, nil
+	}
 	vals := []any{}
 	for _, item := range l.items {
 		val, err := item.eval(e)
+		if err != nil {
+			return nil, err
+		}
+		vals = append(vals, val)
 	}
+	car := l.items[0]
+
+	return vals, nil
 }
