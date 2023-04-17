@@ -10,19 +10,26 @@ type tokType string
 const (
 	tokLParen tokType = "("
 	tokRParen tokType = ")"
-	tokNum    tokType = "num"
-	tokSym    tokType = "sym"
-	tokStr    tokType = "str"
-	tokNil    tokType = "nil"
-	tokTrue   tokType = "true"
-	tokFalse  tokType = "false"
-	tokEof    tokType = "eof"
+
+	tokNum tokType = "num"
+	tokSym tokType = "sym"
+	tokStr tokType = "str"
+
+	tokNil   tokType = "nil"
+	tokTrue  tokType = "true"
+	tokFalse tokType = "false"
+	tokDef   tokType = "def"
+	tokLet   tokType = "let"
+
+	tokEof tokType = "eof"
 )
 
 var keywords = map[string]tokType{
 	"nil":   tokNil,
 	"true":  tokTrue,
 	"false": tokFalse,
+	"def":   tokDef,
+	"let":   tokLet,
 }
 
 type token struct {
@@ -86,14 +93,12 @@ func (l *lexer) scan() {
 		switch {
 		case unicode.IsDigit(r):
 			l.number()
-		case unicode.IsLetter(r):
-			l.ident()
 		case unicode.IsSpace(r):
 			if r == '\n' {
 				l.line++
 			}
 		default:
-			l.token(tokSym)
+			l.symbol()
 		}
 	}
 }
@@ -115,28 +120,26 @@ func (l *lexer) string() {
 }
 
 func (l *lexer) number() error {
-	digits := func() {
-		for !l.eof() && unicode.IsDigit(l.peek()) {
-			l.next()
-		}
-	}
-	digits()
+	l.digits()
 	if l.peek() == '.' {
 		l.next()
-		if r := l.peek(); !unicode.IsDigit(r) {
-			return fmt.Errorf("expected %#U after .", r)
+		if l.eof() || !unicode.IsDigit(l.peek()) {
+			return fmt.Errorf("unexpected symbol after .: %#U", l.peek())
 		}
-		digits()
+		l.digits()
 	}
 	l.token(tokNum)
 	return nil
 }
 
-func (l *lexer) ident() {
-	valid := func(r rune) bool {
-		return unicode.IsLetter(r) || unicode.IsDigit(r) || r == '-'
+func (l *lexer) digits() {
+	for !l.eof() && unicode.IsDigit(l.peek()) {
+		l.next()
 	}
-	for !l.eof() && valid(l.peek()) {
+}
+
+func (l *lexer) symbol() {
+	for !l.eof() && unicode.In(l.peek(), unicode.PrintRanges...) {
 		l.next()
 	}
 	typ := tokSym

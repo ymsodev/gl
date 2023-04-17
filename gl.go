@@ -1,27 +1,30 @@
 package gl
 
 type Gl struct {
-	eval *evaluator
+	env *env
 }
 
 func New() *Gl {
-	return &Gl{newEvaluator()}
+	return &Gl{newEnv(nil)}
 }
 
 func (gl *Gl) Init() {
 
 }
 
-func (gl *Gl) Run(code string) error {
+func (gl *Gl) Run(code string) ([]any, error) {
 	tokens := lex(code)
 	exprs, err := parse(tokens)
 	if err != nil {
-		return err
+		return nil, err
 	}
+	vals := []any{}
 	for _, expr := range exprs {
-		if err := expr.eval(gl.eval); err != nil {
-			return err
+		expr.eval(gl.env)
+		if err := expr.error(); err != nil {
+			return vals, err
 		}
+		vals = append(vals, expr.value())
 	}
-	return nil
+	return vals, nil
 }

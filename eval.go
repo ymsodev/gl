@@ -1,44 +1,25 @@
 package gl
 
 import (
-	"fmt"
 	"strconv"
 )
 
-type evaluator struct {
-	env map[string]any
-}
-
-func newEvaluator() *evaluator {
-	return &evaluator{
-		env: map[string]any{
-			"+": func() {
-
-			}
-		},
-	}
-}
-
-func (e *evaluator) eval(expr expr) (any, error) {
+func eval(expr expr, env *env) (any, error) {
 	switch expr.(type) {
 	case *atom:
-		return e.evalAtom(expr.(*atom))
+		return evalAtom(expr.(*atom), env)
 	case *list:
-		return e.evalList(expr.(*list))
+		return evalList(expr.(*list), env)
 	}
 	return nil, nil
 }
 
-func (e *evaluator) evalAtom(a *atom) (any, error) {
+func evalAtom(a *atom, env *env) (any, error) {
 	switch a.tok.typ {
 	case tokNum:
 		return strconv.ParseFloat(a.tok.text, 64)
-	case tokSym, tokId:
-		val, ok := e.env[a.tok.text]
-		if !ok {
-			return nil, fmt.Errorf("undefined symbol: %s", a.tok.text)		
-		}
-		return val, nil
+	case tokSym:
+		return env.get(a.tok.text)
 	case tokStr:
 		return a.tok.text[1 : len(a.tok.text)-1], nil
 	case tokNil:
@@ -51,19 +32,17 @@ func (e *evaluator) evalAtom(a *atom) (any, error) {
 	return nil, nil
 }
 
-func (e *evaluator) evalList(l *list) (any, error) {
+func evalList(l *list, env *env) (any, error) {
 	if len(l.items) == 0 {
 		return nil, nil
 	}
-	vals := []any{}
-	for _, item := range l.items {
-		val, err := item.eval(e)
+	vals := make([]any, len(l.items))
+	for i, item := range l.items {
+		val, err := eval(item, env)
 		if err != nil {
 			return nil, err
 		}
-		vals = append(vals, val)
+		vals[i] = val
 	}
-	car := l.items[0]
-
 	return vals, nil
 }

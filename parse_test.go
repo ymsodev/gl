@@ -24,15 +24,15 @@ func TestParse(t *testing.T) {
 				{tokEof, 0, 11, 11, ""},
 			},
 			[]expr{
-				&list{
-					lparen: &token{tokLParen, 0, 0, 1, "("},
-					rparen: &token{tokRParen, 0, 10, 11, ")"},
-					items: []expr{
-						&atom{&token{tokSym, 0, 1, 2, "+"}},
-						&atom{&token{tokNum, 0, 2, 5, "123"}},
-						&atom{&token{tokSym, 0, 5, 10, "hello"}},
+				newList(
+					&token{tokLParen, 0, 0, 1, "("},
+					&token{tokRParen, 0, 10, 11, ")"},
+					[]expr{
+						newAtom(&token{tokSym, 0, 1, 2, "+"}),
+						newAtom(&token{tokNum, 0, 2, 5, "123"}),
+						newAtom(&token{tokSym, 0, 5, 10, "hello"}),
 					},
-				},
+				),
 			},
 		},
 		{
@@ -44,17 +44,17 @@ func TestParse(t *testing.T) {
 				{tokEof, 0, 4, 4, ""},
 			},
 			[]expr{
-				&list{
-					lparen: &token{tokLParen, 0, 0, 1, "("},
-					rparen: &token{tokRParen, 0, 3, 4, ")"},
-					items: []expr{
-						&list{
-							lparen: &token{tokLParen, 0, 1, 2, "("},
-							rparen: &token{tokRParen, 0, 2, 3, ")"},
-							items:  []expr{},
-						},
+				newList(
+					&token{tokLParen, 0, 0, 1, "("},
+					&token{tokRParen, 0, 3, 4, ")"},
+					[]expr{
+						newList(
+							&token{tokLParen, 0, 1, 2, "("},
+							&token{tokRParen, 0, 2, 3, ")"},
+							[]expr{},
+						),
 					},
-				},
+				),
 			},
 		},
 	}
@@ -86,10 +86,10 @@ func exprEqual(e1, e2 expr) bool {
 }
 
 func listEqual(l1, l2 *list) bool {
-	if !reflect.DeepEqual(l1.lparen, l2.lparen) {
+	if !reflect.DeepEqual(l1.lp, l2.lp) {
 		return false
 	}
-	if !reflect.DeepEqual(l1.rparen, l2.rparen) {
+	if !reflect.DeepEqual(l1.rp, l2.rp) {
 		return false
 	}
 	if len(l1.items) != len(l2.items) {

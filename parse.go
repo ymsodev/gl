@@ -4,14 +4,43 @@ import (
 	"fmt"
 )
 
-func parse(tokens []*token) ([]expr, error) {
-	return newParser(tokens).parse()
+type expr interface {
+	eval(*env)
+	value() any
+	error() error
 }
+
+type atom struct {
+	tok *token
+	val any
+	err error
+}
+
+func newAtom(tok *token) *atom { return &atom{tok, nil, nil} }
+func (a *atom) eval(env *env)  { a.val, a.err = evalAtom(a, env) }
+func (a *atom) value() any     { return a.val }
+func (a *atom) error() error   { return a.err }
+
+type list struct {
+	lp, rp *token
+	items  []expr
+	val    any
+	err    error
+}
+
+func newList(lp, rp *token, items []expr) *list { return &list{lp, rp, items, nil, nil} }
+func (l *list) eval(env *env)                   { l.val, l.err = evalList(l, env) }
+func (l *list) value() any                      { return l.val }
+func (l *list) error() error                    { return l.err }
 
 type parser struct {
 	tokens []*token
 	exprs  []expr
 	curr   int
+}
+
+func parse(tokens []*token) ([]expr, error) {
+	return newParser(tokens).parse()
 }
 
 func newParser(tokens []*token) *parser {
@@ -35,17 +64,21 @@ func (p *parser) parse() ([]expr, error) {
 
 func (p *parser) expr() (expr, error) {
 	switch t := p.peek(); t.typ {
-	case tokLParen:
-		return p.list()
 	case tokNum, tokSym, tokStr:
 		return p.atom(), nil
+	case tokLParen:
+		return p.list()
 	default:
 		return nil, fmt.Errorf("unexpected token: %s", t.typ)
 	}
 }
 
+func (p *parser) atom() expr {
+	return newAtom(p.next())
+}
+
 func (p *parser) list() (expr, error) {
-	lparen, err := p.consume(tokLParen)
+	lp, err := p.consume(tokLParen)
 	if err != nil {
 		return nil, err
 	}
@@ -57,15 +90,11 @@ func (p *parser) list() (expr, error) {
 		}
 		items = append(items, item)
 	}
-	rparen, err := p.consume(tokRParen)
+	rp, err := p.consume(tokRParen)
 	if err != nil {
 		return nil, err
 	}
-	return &list{lparen, rparen, items}, nil
-}
-
-func (p *parser) atom() expr {
-	return &atom{p.next()}
+	return newList(lp, rp, items), nil
 }
 
 func (p *parser) eof() bool {
