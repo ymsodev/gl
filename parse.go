@@ -16,10 +16,12 @@ type atom struct {
 	err error
 }
 
-func newAtom(tok *token) *atom { return &atom{tok, nil, nil} }
-func (a *atom) eval(env *env)  { a.val, a.err = evalAtom(a, env) }
-func (a *atom) value() any     { return a.val }
-func (a *atom) error() error   { return a.err }
+func newAtom(tok *token) *atom {
+	return &atom{tok, nil, nil}
+}
+func (a *atom) eval(env *env) { a.val, a.err = eval(a, env) }
+func (a *atom) value() any    { return a.val }
+func (a *atom) error() error  { return a.err }
 
 type list struct {
 	lp, rp *token
@@ -28,10 +30,12 @@ type list struct {
 	err    error
 }
 
-func newList(lp, rp *token, items []expr) *list { return &list{lp, rp, items, nil, nil} }
-func (l *list) eval(env *env)                   { l.val, l.err = evalList(l, env) }
-func (l *list) value() any                      { return l.val }
-func (l *list) error() error                    { return l.err }
+func newList(lp, rp *token, items []expr) *list {
+	return &list{lp, rp, items, nil, nil}
+}
+func (l *list) eval(env *env) { l.val, l.err = eval(l, env) }
+func (l *list) value() any    { return l.val }
+func (l *list) error() error  { return l.err }
 
 type parser struct {
 	tokens []*token
