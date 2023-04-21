@@ -15,19 +15,12 @@ func (e *env) set(sym string, val any) {
 	e.data[sym] = val
 }
 
-func (e *env) find(sym string) *env {
-	if _, ok := e.data[sym]; ok {
-		return e
+func (e *env) get(sym string) (any, error) {
+	if res, ok := e.data[sym]; ok {
+		return res, nil
 	}
 	if e.outer == nil {
-		return nil
+		return nil, fmt.Errorf("undefined symbol: %s", sym)
 	}
-	return e.outer.find(sym)
-}
-
-func (e *env) get(sym string) (any, error) {
-	if env := e.find(sym); env != nil {
-		return env.data[sym], nil
-	}
-	return nil, fmt.Errorf("undefined symbol: %s", sym)
+	return e.outer.get(sym)
 }
