@@ -62,12 +62,12 @@ func evalDef(l *list, env *env) (any, error) {
 	if len(l.items) != 3 {
 		return nil, fmt.Errorf("def expects two arguments")
 	}
-	a1, a2 := l.items[1], l.items[2]
-	s, ok := a1.(*atom)
+	arg1, arg2 := l.items[1], l.items[2]
+	s, ok := arg1.(*atom)
 	if !ok || s.tok.typ != tokSym {
-		return nil, fmt.Errorf("expected a symbol after def")
+		return nil, fmt.Errorf("expected a symbol")
 	}
-	val, err := eval(a2, env)
+	val, err := eval(arg2, env)
 	if err != nil {
 		return nil, err
 	}
@@ -76,6 +76,24 @@ func evalDef(l *list, env *env) (any, error) {
 }
 
 func evalLet(l *list, env *env) (any, error) {
-	//locEnv := newEnv(env)
-	return nil, nil
+	if len(l.items) < 3 {
+		return nil, fmt.Errorf("let expects at least two arguments")
+	}
+	local := newEnv(env)
+	for _, item := range l.items[1 : len(l.items)-1] {
+		tup, ok := item.(*list)
+		if !ok || len(tup.items) != 2 {
+			return nil, fmt.Errorf("expected a list of two items")
+		}
+		sym, ok := tup.items[0].(*atom)
+		if !ok || sym.tok.typ != tokSym {
+			return nil, fmt.Errorf("expected a symbol")
+		}
+		val, err := eval(tup.items[1], env)
+		if err != nil {
+			return nil, err
+		}
+		local.set(sym.tok.text, val)
+	}
+	return eval(l.items[len(l.items)-1], local)
 }
