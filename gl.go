@@ -18,13 +18,10 @@ func (gl *Gl) Run(code string) ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	vals := []any{}
-	for _, expr := range exprs {
+	vals := make([]any, len(exprs))
+	for i, expr := range exprs {
 		expr.eval(gl.env)
-		if err := expr.error(); err != nil {
-			return vals, err
-		}
-		vals = append(vals, expr.value())
+		vals[i] = expr.value()
 	}
 	return vals, nil
 }

@@ -5,37 +5,32 @@ import (
 )
 
 type expr interface {
-	eval(*env)
+	eval(*env) error
 	value() any
-	error() error
 }
 
 type atom struct {
 	tok *token
 	val any
-	err error
 }
 
 func newAtom(tok *token) *atom {
-	return &atom{tok, nil, nil}
+	return &atom{tok, nil}
 }
-func (a *atom) eval(env *env) { a.val, a.err = eval(a, env) }
-func (a *atom) value() any    { return a.val }
-func (a *atom) error() error  { return a.err }
+func (a *atom) eval(env *env) error { return eval(a, env) }
+func (a *atom) value() any          { return a.val }
 
 type list struct {
 	lp, rp *token
 	items  []expr
 	val    any
-	err    error
 }
 
 func newList(lp, rp *token, items []expr) *list {
-	return &list{lp, rp, items, nil, nil}
+	return &list{lp, rp, items, nil}
 }
-func (l *list) eval(env *env) { l.val, l.err = eval(l, env) }
-func (l *list) value() any    { return l.val }
-func (l *list) error() error  { return l.err }
+func (l *list) eval(env *env) error { return eval(l, env) }
+func (l *list) value() any          { return l.val }
 
 type parser struct {
 	tokens []*token

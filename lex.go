@@ -1,7 +1,6 @@
 package gl
 
 import (
-	"fmt"
 	"unicode"
 )
 
@@ -10,6 +9,10 @@ type tokType string
 const (
 	tokLParen tokType = "("
 	tokRParen tokType = ")"
+	//tokLBrack tokType = "["
+	//tokRBrack tokType = "]"
+	//tokLBrace tokType = "{"
+	//tokRBrace tokType = "}"
 
 	tokNum tokType = "num"
 	tokSym tokType = "sym"
@@ -119,17 +122,13 @@ func (l *lexer) string() {
 	l.token(tokStr)
 }
 
-func (l *lexer) number() error {
+func (l *lexer) number() {
 	l.digits()
 	if l.peek() == '.' {
 		l.next()
-		if l.eof() || !unicode.IsDigit(l.peek()) {
-			return fmt.Errorf("unexpected symbol after .: %#U", l.peek())
-		}
 		l.digits()
 	}
 	l.token(tokNum)
-	return nil
 }
 
 func (l *lexer) digits() {
