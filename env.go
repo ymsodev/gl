@@ -1,21 +1,35 @@
 package gl
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type env struct {
-	data  map[string]any
+	data  map[string]glObj
 	outer *env
 }
 
 func newEnv(outer *env) *env {
-	return &env{make(map[string]any), outer}
+	return &env{make(map[string]glObj), outer}
 }
 
-func (e *env) set(sym string, val any) {
+func newGlobalEnv() *env {
+	return &env{
+		map[string]glObj{
+			"+": glFn{add},
+			"-": glFn{subtract},
+			"*": glFn{multiply},
+			"/": glFn{divide},
+		},
+		nil,
+	}
+}
+
+func (e *env) set(sym string, val glObj) {
 	e.data[sym] = val
 }
 
-func (e *env) get(sym string) (any, error) {
+func (e *env) get(sym string) (glObj, error) {
 	if res, ok := e.data[sym]; ok {
 		return res, nil
 	}

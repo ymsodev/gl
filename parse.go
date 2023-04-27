@@ -2,55 +2,28 @@ package gl
 
 import (
 	"fmt"
+	"strconv"
 )
 
-type expr interface {
-	eval(*env) error
-	value() any
+func parse(tokens []*token) ([]glObj, error) {
+	return newParser(tokens).parse()
 }
-
-type atom struct {
-	tok *token
-	val any
-}
-
-func newAtom(tok *token) *atom {
-	return &atom{tok, nil}
-}
-func (a *atom) eval(env *env) error { return eval(a, env) }
-func (a *atom) value() any          { return a.val }
-
-type list struct {
-	lp, rp *token
-	items  []expr
-	val    any
-}
-
-func newList(lp, rp *token, items []expr) *list {
-	return &list{lp, rp, items, nil}
-}
-func (l *list) eval(env *env) error { return eval(l, env) }
-func (l *list) value() any          { return l.val }
 
 type parser struct {
 	tokens []*token
-	exprs  []expr
+	exprs  []glObj
 	curr   int
-}
-
-func parse(tokens []*token) ([]expr, error) {
-	return newParser(tokens).parse()
 }
 
 func newParser(tokens []*token) *parser {
 	return &parser{
 		tokens: tokens,
-		exprs:  []expr{},
+		exprs:  []glObj{},
 		curr:   0,
 	}
 }
 
-func (p *parser) parse() ([]expr, error) {
+func (p *parser) parse() ([]glObj, error) {
 	for !p.eof() {
 		expr, err := p.expr()
 		if err != nil {
@@ -61,27 +34,20 @@ func (p *parser) parse() ([]expr, error) {
 	return p.exprs, nil
 }
 
-func (p *parser) expr() (expr, error) {
+func (p *parser) expr() (glObj, error) {
 	switch t := p.peek(); t.typ {
-	case tokNum, tokSym, tokStr:
-		return p.atom(), nil
 	case tokLParen:
 		return p.list()
 	default:
-		return nil, fmt.Errorf("unexpected token: %s", t.typ)
+		return p.atom()
 	}
 }
 
-func (p *parser) atom() expr {
-	return newAtom(p.next())
-}
-
-func (p *parser) list() (expr, error) {
-	lp, err := p.consume(tokLParen)
-	if err != nil {
+func (p *parser) list() (glObj, error) {
+	if _, err := p.consume(tokLParen); err != nil {
 		return nil, err
 	}
-	items := []expr{}
+	items := []glObj{}
 	for !p.check(tokRParen) {
 		item, err := p.expr()
 		if err != nil {
@@ -89,11 +55,33 @@ func (p *parser) list() (expr, error) {
 		}
 		items = append(items, item)
 	}
-	rp, err := p.consume(tokRParen)
-	if err != nil {
+	if _, err := p.consume(tokRParen); err != nil {
 		return nil, err
 	}
-	return newList(lp, rp, items), nil
+	return glList{items}, nil
+}
+
+func (p *parser) atom() (glObj, error) {
+	switch t := p.next(); t.typ {
+	case tokSym:
+		return glSym{t.text}, nil
+	case tokTrue:
+		return glBool{true}, nil
+	case tokFalse:
+		return glBool{false}, nil
+	case tokNum:
+		val, err := strconv.ParseFloat(t.text, 64)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse number: %s", t.text)
+		}
+		return glNum{val}, nil
+	case tokStr:
+		return glStr{t.text[1 : len(t.text)-1]}, nil
+	case tokNil:
+		return glNil{}, nil
+	default:
+		return nil, fmt.Errorf("unexpected token: %s", t.typ)
+	}
 }
 
 func (p *parser) eof() bool {

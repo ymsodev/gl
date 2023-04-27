@@ -2,49 +2,36 @@ package gl
 
 import (
 	"fmt"
-	"strconv"
 )
 
-func eval(expr expr, env *env) error {
+func eval(expr glObj, env *env) (glObj, error) {
 	switch v := expr.(type) {
-	case *atom:
-		return evalAtom(v, env)
-	case *list:
+	case glSym:
+		return env.get(v.val)
+	case glList:
 		return evalList(v, env)
 	}
-	return nil
+	return expr, nil
 }
 
-func evalAtom(a *atom, env *env) error {
-	switch a.tok.typ {
-	case tokNum:
-		val, err := strconv.ParseFloat(a.tok.text, 64)
-		if err != nil {
-			return err
-		}
-		a.val = val
-	case tokSym:
-		val, err := env.get(a.tok.text)
-		if err != nil {
-			return err
-		}
-		a.val = val
-	case tokStr:
-		a.val = a.tok.text[1 : len(a.tok.text)-1]
-	case tokNil:
-		a.val = nil
-	case tokTrue:
-		a.val = true
-	case tokFalse:
-		a.val = false
-	}
-	return nil
-}
-
-func evalList(l *list, env *env) error {
+func evalList(l glList, env *env) (glObj, error) {
 	if len(l.items) == 0 {
-		return nil
+		return glNil{}, nil
 	}
+	if car, ok := l.items[0].(*atom); ok {
+		cdr := l.items[1:]
+		switch car.tok.typ {
+		case tokDef:
+			val, err := def(cdr, env)
+			if err != nil {
+				return err
+			}
+			l.val = val
+			return nil
+
+		}
+	}
+
 	for _, item := range l.items {
 		if err := eval(item, env); err != nil {
 			return err
@@ -65,7 +52,7 @@ func apply(l *list, env *env) (any, error) {
 		case tokDef:
 			return def(cdr, env)
 		case tokLet:
-			return let(l, env)
+			return let(cdr, env)
 		case tokSym:
 			if f, ok := car.val.(glFn); ok {
 				args := make([]any, len(cdr))
@@ -91,21 +78,18 @@ func def(args []expr, env *env) (any, error) {
 	if !ok || s.tok.typ != tokSym {
 		return nil, fmt.Errorf("expected a symbol")
 	}
-	if err := eval(args[1], env); err != nil {
-		return nil, err
-	}
 	val := args[1].value()
 	env.set(s.tok.text, val)
 	return val, nil
 }
 
-func let(l *list, env *env) (any, error) {
-	if len(l.items) < 3 {
+func let(args []expr, env *env) (any, error) {
+	if len(args) < 2 {
 		return nil, fmt.Errorf("let expects at least two arguments")
 	}
 	local := newEnv(env)
-	for _, item := range l.items[1 : len(l.items)-1] {
-		tup, ok := item.(*list)
+	for _, arg := range args[:len(args)-1] {
+		tup, ok := arg.(*list)
 		if !ok || len(tup.items) != 2 {
 			return nil, fmt.Errorf("expected a list of two items")
 		}
@@ -113,11 +97,8 @@ func let(l *list, env *env) (any, error) {
 		if !ok || sym.tok.typ != tokSym {
 			return nil, fmt.Errorf("expected a symbol")
 		}
-		if err := eval(tup.items[1], env); err != nil {
-			return nil, err
-		}
 		val := tup.items[1].value()
 		local.set(sym.tok.text, val)
 	}
-	return eval(l.items[len(l.items)-1], local), nil
+	return eval(args[len(args)-1], local), nil
 }

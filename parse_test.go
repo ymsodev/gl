@@ -12,7 +12,7 @@ var exprComparer = cmp.Comparer(exprEqual)
 func TestParse(t *testing.T) {
 	testCases := []struct {
 		input    []*token
-		expected []expr
+		expected []glObj
 	}{
 		{
 			[]*token{
@@ -23,16 +23,14 @@ func TestParse(t *testing.T) {
 				{tokRParen, 0, 10, 11, ")"},
 				{tokEof, 0, 11, 11, ""},
 			},
-			[]expr{
-				newList(
-					&token{tokLParen, 0, 0, 1, "("},
-					&token{tokRParen, 0, 10, 11, ")"},
-					[]expr{
-						newAtom(&token{tokSym, 0, 1, 2, "+"}),
-						newAtom(&token{tokNum, 0, 2, 5, "123"}),
-						newAtom(&token{tokSym, 0, 5, 10, "hello"}),
+			[]glObj{
+				glList{
+					[]glObj{
+						glSym{"+"},
+						glNum{123},
+						glStr{"hello"},
 					},
-				),
+				},
 			},
 		},
 		{
@@ -43,18 +41,14 @@ func TestParse(t *testing.T) {
 				{tokRParen, 0, 3, 4, ")"},
 				{tokEof, 0, 4, 4, ""},
 			},
-			[]expr{
-				newList(
-					&token{tokLParen, 0, 0, 1, "("},
-					&token{tokRParen, 0, 3, 4, ")"},
-					[]expr{
-						newList(
-							&token{tokLParen, 0, 1, 2, "("},
-							&token{tokRParen, 0, 2, 3, ")"},
-							[]expr{},
-						),
+			[]glObj{
+				glList{
+					[]glObj{
+						glList{
+							[]glObj{},
+						},
 					},
-				),
+				},
 			},
 		},
 	}
@@ -71,27 +65,19 @@ func TestParse(t *testing.T) {
 	}
 }
 
-func exprEqual(e1, e2 expr) bool {
-	if reflect.TypeOf(e1) != reflect.TypeOf(e2) {
+func exprEqual(obj1, obj2 glObj) bool {
+	if reflect.TypeOf(obj1) != reflect.TypeOf(obj2) {
 		return false
 	}
-	switch e1.(type) {
-	case *list:
-		return listEqual(e1.(*list), e2.(*list))
-	case *atom:
-		return atomEqual(e1.(*atom), e2.(*atom))
+	switch obj1.(type) {
+	case glList:
+		return listEqual(obj1.(glList), obj2.(glList))
 	default:
-		return false
+		return reflect.DeepEqual(obj1, obj2)
 	}
 }
 
-func listEqual(l1, l2 *list) bool {
-	if !reflect.DeepEqual(l1.lp, l2.lp) {
-		return false
-	}
-	if !reflect.DeepEqual(l1.rp, l2.rp) {
-		return false
-	}
+func listEqual(l1, l2 glList) bool {
 	if len(l1.items) != len(l2.items) {
 		return false
 	}
@@ -102,8 +88,4 @@ func listEqual(l1, l2 *list) bool {
 		}
 	}
 	return true
-}
-
-func atomEqual(a1, a2 *atom) bool {
-	return reflect.DeepEqual(a1, a2)
 }

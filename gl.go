@@ -5,23 +5,26 @@ type Gl struct {
 }
 
 func New() *Gl {
-	return &Gl{newEnv(nil)}
+	return &Gl{newGlobalEnv()}
 }
 
 func (gl *Gl) Init() {
 
 }
 
-func (gl *Gl) Run(code string) ([]any, error) {
+func (gl *Gl) Run(code string) ([]glObj, error) {
 	tokens := lex(code)
 	exprs, err := parse(tokens)
 	if err != nil {
 		return nil, err
 	}
-	vals := make([]any, len(exprs))
+	vals := make([]glObj, len(exprs))
 	for i, expr := range exprs {
-		expr.eval(gl.env)
-		vals[i] = expr.value()
+		val, err := eval(expr, gl.env)
+		if err != nil {
+			return nil, err
+		}
+		vals[i] = val
 	}
 	return vals, nil
 }

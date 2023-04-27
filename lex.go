@@ -9,30 +9,22 @@ type tokType string
 const (
 	tokLParen tokType = "("
 	tokRParen tokType = ")"
-	//tokLBrack tokType = "["
-	//tokRBrack tokType = "]"
-	//tokLBrace tokType = "{"
-	//tokRBrace tokType = "}"
 
-	tokNum tokType = "num"
 	tokSym tokType = "sym"
+	tokNum tokType = "num"
 	tokStr tokType = "str"
 
-	tokNil   tokType = "nil"
 	tokTrue  tokType = "true"
 	tokFalse tokType = "false"
-	tokDef   tokType = "def"
-	tokLet   tokType = "let"
+	tokNil   tokType = "nil"
 
 	tokEof tokType = "eof"
 )
 
-var keywords = map[string]tokType{
-	"nil":   tokNil,
+var reserved = map[string]tokType{
 	"true":  tokTrue,
 	"false": tokFalse,
-	"def":   tokDef,
-	"let":   tokLet,
+	"nil":   tokNil,
 }
 
 type token struct {
@@ -142,7 +134,7 @@ func (l *lexer) symbol() {
 		l.next()
 	}
 	typ := tokSym
-	if k, ok := keywords[l.text()]; ok {
+	if k, ok := reserved[l.text()]; ok {
 		typ = k
 	}
 	l.token(typ)

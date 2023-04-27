@@ -7,11 +7,11 @@ import (
 )
 
 func TestEnvSimple(t *testing.T) {
-	data := map[string]any{
-		"hello": "world",
-		"abc":   123,
-		"true":  true,
-		"false": false,
+	data := map[string]glObj{
+		"hello": glStr{"world"},
+		"abc":   glNum{123},
+		"true":  glBool{true},
+		"false": glBool{false},
 	}
 	env := newEnv(nil)
 	for k, v := range data {
@@ -35,35 +35,35 @@ func TestEnvGet(t *testing.T) {
 	}{
 		{
 			envs: []*env{
-				{map[string]any{"abc": 123}, nil},
-				{map[string]any{"hello": "world"}, nil},
-				{map[string]any{"+++": false}, nil},
+				{map[string]glObj{"abc": glNum{123}}, nil},
+				{map[string]glObj{"hello": glStr{"world"}}, nil},
+				{map[string]glObj{"+++": glBool{false}}, nil},
 			},
 			sym:      "hello",
 			expected: "world",
 		},
 		{
 			envs: []*env{
-				{map[string]any{"abc": 123}, nil},
-				{map[string]any{}, nil},
-				{map[string]any{}, nil},
-				{map[string]any{}, nil},
-				{map[string]any{}, nil},
-				{map[string]any{}, nil},
-				{map[string]any{}, nil},
-				{map[string]any{}, nil},
-				{map[string]any{}, nil},
+				{map[string]glObj{"abc": glNum{123}}, nil},
+				{map[string]glObj{}, nil},
+				{map[string]glObj{}, nil},
+				{map[string]glObj{}, nil},
+				{map[string]glObj{}, nil},
+				{map[string]glObj{}, nil},
+				{map[string]glObj{}, nil},
+				{map[string]glObj{}, nil},
+				{map[string]glObj{}, nil},
 			},
 			sym:      "abc",
 			expected: 123,
 		},
 		{
 			envs: []*env{
-				{map[string]any{"+": "a"}, nil},
-				{map[string]any{"+": "b"}, nil},
-				{map[string]any{"+": "c"}, nil},
-				{map[string]any{"+": "d"}, nil},
-				{map[string]any{"+": "e"}, nil},
+				{map[string]glObj{"+": glStr{"a"}}, nil},
+				{map[string]glObj{"+": glStr{"b"}}, nil},
+				{map[string]glObj{"+": glStr{"c"}}, nil},
+				{map[string]glObj{"+": glStr{"d"}}, nil},
+				{map[string]glObj{"+": glStr{"e"}}, nil},
 			},
 			sym:      "+",
 			expected: "e",
