@@ -8,7 +8,7 @@ func eval(expr glObj, env *env) glObj {
 	switch v := expr.(type) {
 	case glSym:
 		// TODO: maybe just return the error type?
-		res, err := env.get(v.val)
+		res, err := env.get(v.name)
 		if err != nil {
 			return glErr{err}
 		}
@@ -25,7 +25,7 @@ func evalList(l glList, env *env) glObj {
 	}
 	car, cdr := l.items[0], l.items[1:]
 	if s, ok := car.(glSym); ok {
-		switch s.val {
+		switch s.name {
 		case "def":
 			return def(cdr, env)
 		case "let":
@@ -62,7 +62,7 @@ func def(args []glObj, env *env) glObj {
 	if err, ok := val.(glErr); ok {
 		return err
 	}
-	env.set(sym.val, val)
+	env.set(sym.name, val)
 	return val
 }
 
@@ -85,7 +85,7 @@ func let(args []glObj, env *env) glObj {
 		if err, ok := val.(glErr); ok {
 			return err
 		}
-		local.set(sym.val, val)
+		local.set(sym.name, val)
 	}
 	return eval(targ, local)
 }

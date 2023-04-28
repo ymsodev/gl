@@ -32,5 +32,5 @@ func scan(s *bufio.Scanner) bool {
 
 func run(text string) {
 	val := runtime.Run(text)
-	fmt.Println(val)
+	gl.Print(val)
 }

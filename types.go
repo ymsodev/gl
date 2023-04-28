@@ -3,7 +3,7 @@ package gl
 type glObj interface{ glObj() }
 
 type glNil struct{}
-type glSym struct{ val string }
+type glSym struct{ name string }
 type glBool struct{ val bool }
 type glNum struct{ val float64 }
 type glStr struct{ val string }
