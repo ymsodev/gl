@@ -12,19 +12,18 @@ func (gl *Gl) Init() {
 
 }
 
-func (gl *Gl) Run(code string) ([]glObj, error) {
+func (gl *Gl) Run(code string) glObj {
 	tokens := lex(code)
 	exprs, err := parse(tokens)
 	if err != nil {
-		return nil, err
+		return glErr{err}
 	}
-	vals := make([]glObj, len(exprs))
-	for i, expr := range exprs {
-		val, err := eval(expr, gl.env)
-		if err != nil {
-			return nil, err
+	var val glObj = glNil{}
+	for _, expr := range exprs {
+		val = eval(expr, gl.env)
+		if err, ok := val.(glErr); ok {
+			return err
 		}
-		vals[i] = val
 	}
-	return vals, nil
+	return val
 }

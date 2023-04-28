@@ -31,12 +31,6 @@ func scan(s *bufio.Scanner) bool {
 }
 
 func run(text string) {
-	vals, err := runtime.Run(text)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	for _, val := range vals {
-		fmt.Println(val)
-	}
+	val := runtime.Run(text)
+	fmt.Println(val)
 }

@@ -1,104 +1,91 @@
 package gl
 
 import (
-	"fmt"
+	"errors"
 )
 
-func eval(expr glObj, env *env) (glObj, error) {
+func eval(expr glObj, env *env) glObj {
 	switch v := expr.(type) {
 	case glSym:
-		return env.get(v.val)
+		// TODO: maybe just return the error type?
+		res, err := env.get(v.val)
+		if err != nil {
+			return glErr{err}
+		}
+		return res
 	case glList:
 		return evalList(v, env)
 	}
-	return expr, nil
+	return expr
 }
 
-func evalList(l glList, env *env) (glObj, error) {
+func evalList(l glList, env *env) glObj {
 	if len(l.items) == 0 {
-		return glNil{}, nil
+		return glNil{}
 	}
-	if car, ok := l.items[0].(*atom); ok {
-		cdr := l.items[1:]
-		switch car.tok.typ {
-		case tokDef:
-			val, err := def(cdr, env)
-			if err != nil {
-				return err
-			}
-			l.val = val
-			return nil
-
+	car, cdr := l.items[0], l.items[1:]
+	if s, ok := car.(glSym); ok {
+		switch s.val {
+		case "def":
+			return def(cdr, env)
+		case "let":
+			return let(cdr, env)
 		}
 	}
-
-	for _, item := range l.items {
-		if err := eval(item, env); err != nil {
+	for i, item := range l.items {
+		val := eval(item, env)
+		if err, ok := val.(glErr); ok {
 			return err
 		}
+		l.items[i] = val
 	}
-	val, err := apply(l, env)
-	if err != nil {
+	return apply(l, env)
+}
+
+func apply(l glList, env *env) glObj {
+	f, args := l.items[0], l.items[1:]
+	if f, ok := f.(glFn); ok {
+		return f.fn(args...)
+	}
+	return l
+}
+
+func def(args []glObj, env *env) glObj {
+	if len(args) != 2 {
+		return glErr{errors.New("def expects two arguments")}
+	}
+	sym, ok := args[0].(glSym)
+	if !ok {
+		return glErr{errors.New("def expects a symbol as the first argument")}
+	}
+	val := eval(args[1], env)
+	if err, ok := val.(glErr); ok {
 		return err
 	}
-	l.val = val
-	return nil
+	env.set(sym.val, val)
+	return val
 }
 
-func apply(l *list, env *env) (any, error) {
-	if car, ok := l.items[0].(*atom); ok {
-		cdr := l.items[1:]
-		switch car.tok.typ {
-		case tokDef:
-			return def(cdr, env)
-		case tokLet:
-			return let(cdr, env)
-		case tokSym:
-			if f, ok := car.val.(glFn); ok {
-				args := make([]any, len(cdr))
-				for i, item := range cdr {
-					args[i] = item.value()
-				}
-				return f.fn(args...), nil
-			}
-		}
-	}
-	vals := make([]any, len(l.items))
-	for i, item := range l.items {
-		vals[i] = item.value()
-	}
-	return vals, nil
-}
-
-func def(args []expr, env *env) (any, error) {
-	if len(args) != 2 {
-		return nil, fmt.Errorf("def expects two arguments")
-	}
-	s, ok := args[0].(*atom)
-	if !ok || s.tok.typ != tokSym {
-		return nil, fmt.Errorf("expected a symbol")
-	}
-	val := args[1].value()
-	env.set(s.tok.text, val)
-	return val, nil
-}
-
-func let(args []expr, env *env) (any, error) {
+func let(args []glObj, env *env) glObj {
 	if len(args) < 2 {
-		return nil, fmt.Errorf("let expects at least two arguments")
+		return glErr{errors.New("let expects at least two arguments")}
 	}
 	local := newEnv(env)
-	for _, arg := range args[:len(args)-1] {
-		tup, ok := arg.(*list)
+	params, targ := args[:len(args)-1], args[len(args)-1]
+	for _, param := range params {
+		tup, ok := param.(glList)
 		if !ok || len(tup.items) != 2 {
-			return nil, fmt.Errorf("expected a list of two items")
+			return glErr{errors.New("expected a list of two items")}
 		}
-		sym, ok := tup.items[0].(*atom)
-		if !ok || sym.tok.typ != tokSym {
-			return nil, fmt.Errorf("expected a symbol")
+		sym, ok := tup.items[0].(glSym)
+		if !ok {
+			return glErr{errors.New("expected a symbol")}
 		}
-		val := tup.items[1].value()
-		local.set(sym.tok.text, val)
+		val := eval(tup.items[1], env)
+		if err, ok := val.(glErr); ok {
+			return err
+		}
+		local.set(sym.val, val)
 	}
-	return eval(args[len(args)-1], local), nil
+	return eval(targ, local)
 }
