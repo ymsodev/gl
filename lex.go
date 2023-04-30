@@ -130,7 +130,7 @@ func (l *lexer) digits() {
 }
 
 func (l *lexer) symbol() {
-	for !l.eof() && unicode.In(l.peek(), unicode.PrintRanges...) {
+	for !l.eof() && unicode.In(l.peek(), unicode.PrintRanges...) && l.peek() != '(' && l.peek() != ')' {
 		l.next()
 	}
 	typ := tokSym

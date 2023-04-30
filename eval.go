@@ -27,9 +27,15 @@ func evalList(l glList, env *env) glObj {
 	if s, ok := car.(glSym); ok {
 		switch s.name {
 		case "def":
-			return def(cdr, env)
+			return evalDef(cdr, env)
 		case "let":
-			return let(cdr, env)
+			return evalLet(cdr, env)
+		case "do":
+			return evalDo(cdr, env)
+		case "if":
+			return evalIf(cdr, env)
+		case "fn":
+			return evalFn(cdr, env)
 		}
 	}
 	for i, item := range l.items {
@@ -50,7 +56,7 @@ func apply(l glList, env *env) glObj {
 	return l
 }
 
-func def(args []glObj, env *env) glObj {
+func evalDef(args []glObj, env *env) glObj {
 	if len(args) != 2 {
 		return glErr{errors.New("def expects two arguments")}
 	}
@@ -66,7 +72,7 @@ func def(args []glObj, env *env) glObj {
 	return val
 }
 
-func let(args []glObj, env *env) glObj {
+func evalLet(args []glObj, env *env) glObj {
 	if len(args) < 2 {
 		return glErr{errors.New("let expects at least two arguments")}
 	}
@@ -88,4 +94,37 @@ func let(args []glObj, env *env) glObj {
 		local.set(sym.name, val)
 	}
 	return eval(targ, local)
+}
+
+func evalDo(args []glObj, env *env) glObj {
+	var res glObj
+	for _, arg := range args {
+		res = eval(arg, env)
+		if err, ok := res.(glErr); ok {
+			return err
+		}
+	}
+	return res
+}
+
+func evalIf(args []glObj, env *env) glObj {
+	if argc := len(args); argc != 2 && argc != 3 {
+		return glErr{errors.New("if expects two or three arguments)")}
+	}
+	arg0 := eval(args[0], env)
+	cond, ok := arg0.(glBool)
+	if !ok {
+		return glErr{errors.New("expected a bool as a condition")}
+	}
+	if cond.val {
+		return eval(args[1], env)
+	}
+	if len(args) == 3 {
+		return eval(args[2], env)
+	}
+	return glNil{}
+}
+
+func evalFn(args []glObj, env *env) glObj {
+	return glFn{}
 }

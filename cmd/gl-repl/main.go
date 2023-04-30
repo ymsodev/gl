@@ -31,6 +31,8 @@ func scan(s *bufio.Scanner) bool {
 }
 
 func run(text string) {
+	// TODO: REPL commands
+
 	val := runtime.Run(text)
 	gl.Print(val)
 }
