@@ -76,7 +76,7 @@ func evalLet(args []glObj, env *env) glObj {
 	if len(args) < 2 {
 		return glErr{errors.New("let expects at least two arguments")}
 	}
-	local := newEnv(env)
+	local := newEnv(env, nil)
 	params, targ := args[:len(args)-1], args[len(args)-1]
 	for _, param := range params {
 		tup, ok := param.(glList)
@@ -126,5 +126,25 @@ func evalIf(args []glObj, env *env) glObj {
 }
 
 func evalFn(args []glObj, env *env) glObj {
-	return glFn{}
+	if len(args) != 2 {
+		return glErr{errors.New("fn expects two arguments")}
+	}
+	binds, ok := args[0].(glList)
+	if !ok {
+		return glErr{errors.New("expected a list as parameters")}
+	}
+	for _, b := range binds.items {
+		if _, ok := b.(glSym); !ok {
+			return glErr{errors.New("expected a list of symbols")}
+		}
+	}
+	body := args[1]
+	return glFn{func(args ...glObj) glObj {
+		exprs := make(map[string]glObj)
+		for i, b := range binds.items {
+			exprs[b.(glSym).name] = args[i]
+		}
+		local := newEnv(env, exprs)
+		return eval(body, local)
+	}}
 }
