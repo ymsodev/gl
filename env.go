@@ -6,25 +6,11 @@ import (
 
 type env struct {
 	outer *env
-	binds map[string]glObj
 	data  map[string]glObj
 }
 
-func newEnv(outer *env, binds map[string]glObj) *env {
-	return &env{outer, binds, make(map[string]glObj)}
-}
-
-func newGlobalEnv() *env {
-	return &env{
-		nil,
-		map[string]glObj{},
-		map[string]glObj{
-			"+": glFn{add},
-			"-": glFn{subtract},
-			"*": glFn{multiply},
-			"/": glFn{divide},
-		},
-	}
+func newEnv(outer *env) *env {
+	return &env{outer, make(map[string]glObj)}
 }
 
 func (e *env) set(sym string, val glObj) {

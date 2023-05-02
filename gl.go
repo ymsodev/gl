@@ -7,7 +7,17 @@ type Gl struct {
 }
 
 func New() *Gl {
-	return &Gl{newGlobalEnv()}
+	return &Gl{
+		&env{
+			nil,
+			map[string]glObj{
+				"+": glFn{add},
+				"-": glFn{subtract},
+				"*": glFn{multiply},
+				"/": glFn{divide},
+			},
+		},
+	}
 }
 
 func (gl *Gl) Run(code string) glObj {
