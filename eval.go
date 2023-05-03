@@ -38,22 +38,23 @@ func evalList(l glList, env *env) glObj {
 			return evalFn(cdr, env)
 		}
 	}
+	vals := make([]glObj, len(l.items))
 	for i, item := range l.items {
 		val := eval(item, env)
 		if err, ok := val.(glErr); ok {
 			return err
 		}
-		l.items[i] = val
+		vals[i] = val
 	}
-	return apply(l, env)
+	return apply(vals, env)
 }
 
-func apply(l glList, env *env) glObj {
-	f, args := l.items[0], l.items[1:]
+func apply(items []glObj, env *env) glObj {
+	f, args := items[0], items[1:]
 	if f, ok := f.(glFn); ok {
 		return f.fn(args...)
 	}
-	return l
+	return glList{items}
 }
 
 func evalDef(args []glObj, env *env) glObj {
