@@ -9,10 +9,11 @@ func New() *GL {
 		&env{
 			nil,
 			map[string]GLObject{
-				"+": GLLambda{add},
-				"-": GLLambda{subtract},
-				"*": GLLambda{multiply},
-				"/": GLLambda{divide},
+				"print": GLFunction{Print},
+				"+":     GLFunction{Add},
+				"-":     GLFunction{Subtract},
+				"*":     GLFunction{Multiply},
+				"/":     GLFunction{Divide},
 			},
 		},
 	}

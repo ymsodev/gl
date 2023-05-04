@@ -34,7 +34,7 @@ func evalList(l GLList, env *env) GLObject {
 			return evalDo(cdr, env)
 		case "if":
 			return evalIf(cdr, env)
-		case "lambda", "\\":
+		case "fn", "\\":
 			return evalFn(cdr, env)
 		}
 	}
@@ -51,7 +51,7 @@ func evalList(l GLList, env *env) GLObject {
 
 func apply(items []GLObject, env *env) GLObject {
 	lambda, args := items[0], items[1:]
-	if lambda, ok := lambda.(GLLambda); ok {
+	if lambda, ok := lambda.(GLFunction); ok {
 		return lambda.fn(args...)
 	}
 	return GLList{items}
@@ -140,7 +140,7 @@ func evalFn(args []GLObject, env *env) GLObject {
 		}
 	}
 	body := args[1]
-	return GLLambda{func(args ...GLObject) GLObject {
+	return GLFunction{func(args ...GLObject) GLObject {
 		if len(args) != len(params.items) {
 			return GLError{errors.New("invalid number of arguments")}
 		}

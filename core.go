@@ -1,13 +1,37 @@
 package gl
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+	"strings"
+)
 
 var (
 	errInvalidNumArgs = GLError{errors.New("invalid number of arguments")}
 	errInvalidArgType = GLError{errors.New("invalid argument type")}
 )
 
-func add(args ...GLObject) GLObject {
+type Namespace struct {
+	m map[string]GLFunction
+}
+
+func (n *Namespace) Set(sym GLSymbol, fn GLFunction) {
+	n.m[]
+}
+
+func Print(args ...GLObject) GLObject {
+	var b strings.Builder
+	for i, arg := range args {
+		b.WriteString(arg.String())
+		if i < len(args)-1 {
+			b.WriteRune(' ')
+		}
+	}
+	fmt.Println(b.String())
+	return GLNil{}
+}
+
+func Add(args ...GLObject) GLObject {
 	if len(args) < 2 {
 		return errInvalidNumArgs
 	}
@@ -25,7 +49,7 @@ func add(args ...GLObject) GLObject {
 	return res
 }
 
-func subtract(args ...GLObject) GLObject {
+func Subtract(args ...GLObject) GLObject {
 	if len(args) < 2 {
 		return errInvalidNumArgs
 	}
@@ -43,7 +67,7 @@ func subtract(args ...GLObject) GLObject {
 	return res
 }
 
-func multiply(args ...GLObject) GLObject {
+func Multiply(args ...GLObject) GLObject {
 	if len(args) < 2 {
 		return errInvalidNumArgs
 	}
@@ -61,7 +85,7 @@ func multiply(args ...GLObject) GLObject {
 	return res
 }
 
-func divide(args ...GLObject) GLObject {
+func Divide(args ...GLObject) GLObject {
 	if len(args) < 2 {
 		return errInvalidNumArgs
 	}
