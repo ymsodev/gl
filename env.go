@@ -6,18 +6,18 @@ import (
 
 type env struct {
 	outer *env
-	data  map[string]glObj
+	data  map[string]GLObject
 }
 
 func newEnv(outer *env) *env {
-	return &env{outer, make(map[string]glObj)}
+	return &env{outer, make(map[string]GLObject)}
 }
 
-func (e *env) set(sym string, val glObj) {
+func (e *env) set(sym string, val GLObject) {
 	e.data[sym] = val
 }
 
-func (e *env) get(sym string) (glObj, error) {
+func (e *env) get(sym string) (GLObject, error) {
 	if res, ok := e.data[sym]; ok {
 		return res, nil
 	}

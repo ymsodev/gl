@@ -2,72 +2,77 @@ package gl
 
 import "errors"
 
-func add(args ...glObj) glObj {
+var (
+	errInvalidNumArgs = GLError{errors.New("invalid number of arguments")}
+	errInvalidArgType = GLError{errors.New("invalid argument type")}
+)
+
+func add(args ...GLObject) GLObject {
 	if len(args) < 2 {
-		return glErr{errors.New("+ expects at least two operand")}
+		return errInvalidNumArgs
 	}
-	res, ok := args[0].(glNum)
+	res, ok := args[0].(GLNumber)
 	if !ok {
-		return glErr{errors.New("operands for + must be numbers")}
+		return errInvalidArgType
 	}
 	for _, arg := range args[1:] {
-		n, ok := arg.(glNum)
+		n, ok := arg.(GLNumber)
 		if !ok {
-			return glErr{errors.New("operands for + must be numbers")}
+			return errInvalidArgType
 		}
 		res.val += n.val
 	}
 	return res
 }
 
-func subtract(args ...glObj) glObj {
+func subtract(args ...GLObject) GLObject {
 	if len(args) < 2 {
-		return glErr{errors.New("- expects at least two operand")}
+		return errInvalidNumArgs
 	}
-	res, ok := args[0].(glNum)
+	res, ok := args[0].(GLNumber)
 	if !ok {
-		return glErr{errors.New("operands for - must be numbers")}
+		return errInvalidArgType
 	}
 	for _, arg := range args[1:] {
-		num, ok := arg.(glNum)
+		num, ok := arg.(GLNumber)
 		if !ok {
-			return glErr{errors.New("operands for - must be numbers")}
+			return errInvalidArgType
 		}
 		res.val -= num.val
 	}
 	return res
 }
 
-func multiply(args ...glObj) glObj {
+func multiply(args ...GLObject) GLObject {
 	if len(args) < 2 {
-		return glErr{errors.New("* expects at least two operand")}
+		return errInvalidNumArgs
 	}
-	res, ok := args[0].(glNum)
+	res, ok := args[0].(GLNumber)
 	if !ok {
-		return glErr{errors.New("operands for * must be numbers")}
+		return errInvalidArgType
 	}
 	for _, arg := range args[1:] {
-		num, ok := arg.(glNum)
+		num, ok := arg.(GLNumber)
 		if !ok {
-			return glErr{errors.New("operands for * must be numbers")}
+			return errInvalidArgType
 		}
 		res.val *= num.val
 	}
 	return res
 }
 
-func divide(args ...glObj) glObj {
+func divide(args ...GLObject) GLObject {
 	if len(args) < 2 {
-		return glErr{errors.New("/ expects at least two operand")}
+		return errInvalidNumArgs
 	}
-	res, ok := args[0].(glNum)
+	res, ok := args[0].(GLNumber)
 	if !ok {
-		return glErr{errors.New("operands for / must be numbers")}
+		return errInvalidArgType
 	}
 	for _, arg := range args[1:] {
-		num, ok := arg.(glNum)
+		num, ok := arg.(GLNumber)
 		if !ok {
-			return glErr{errors.New("operands for / must be numbers")}
+			return errInvalidArgType
 		}
 		res.val /= num.val
 	}

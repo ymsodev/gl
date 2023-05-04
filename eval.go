@@ -4,27 +4,27 @@ import (
 	"errors"
 )
 
-func eval(expr glObj, env *env) glObj {
+func Eval(expr GLObject, env *env) GLObject {
 	switch v := expr.(type) {
-	case glSym:
+	case GLSymbol:
 		// TODO: maybe just return the error type?
 		res, err := env.get(v.name)
 		if err != nil {
-			return glErr{err}
+			return GLError{err}
 		}
 		return res
-	case glList:
+	case GLList:
 		return evalList(v, env)
 	}
 	return expr
 }
 
-func evalList(l glList, env *env) glObj {
+func evalList(l GLList, env *env) GLObject {
 	if len(l.items) == 0 {
-		return glNil{}
+		return GLNil{}
 	}
 	car, cdr := l.items[0], l.items[1:]
-	if s, ok := car.(glSym); ok {
+	if s, ok := car.(GLSymbol); ok {
 		switch s.name {
 		case "def":
 			return evalDef(cdr, env)
@@ -34,14 +34,14 @@ func evalList(l glList, env *env) glObj {
 			return evalDo(cdr, env)
 		case "if":
 			return evalIf(cdr, env)
-		case "fn":
+		case "lambda", "\\":
 			return evalFn(cdr, env)
 		}
 	}
-	vals := make([]glObj, len(l.items))
+	vals := make([]GLObject, len(l.items))
 	for i, item := range l.items {
-		val := eval(item, env)
-		if err, ok := val.(glErr); ok {
+		val := Eval(item, env)
+		if err, ok := val.(GLError); ok {
 			return err
 		}
 		vals[i] = val
@@ -49,105 +49,105 @@ func evalList(l glList, env *env) glObj {
 	return apply(vals, env)
 }
 
-func apply(items []glObj, env *env) glObj {
-	f, args := items[0], items[1:]
-	if f, ok := f.(glFn); ok {
-		return f.fn(args...)
+func apply(items []GLObject, env *env) GLObject {
+	lambda, args := items[0], items[1:]
+	if lambda, ok := lambda.(GLLambda); ok {
+		return lambda.fn(args...)
 	}
-	return glList{items}
+	return GLList{items}
 }
 
-func evalDef(args []glObj, env *env) glObj {
+func evalDef(args []GLObject, env *env) GLObject {
 	if len(args) != 2 {
-		return glErr{errors.New("def expects two arguments")}
+		return GLError{errors.New("def expects two arguments")}
 	}
-	sym, ok := args[0].(glSym)
+	sym, ok := args[0].(GLSymbol)
 	if !ok {
-		return glErr{errors.New("def expects a symbol as the first argument")}
+		return GLError{errors.New("def expects a symbol as the first argument")}
 	}
-	val := eval(args[1], env)
-	if err, ok := val.(glErr); ok {
+	val := Eval(args[1], env)
+	if err, ok := val.(GLError); ok {
 		return err
 	}
 	env.set(sym.name, val)
 	return val
 }
 
-func evalLet(args []glObj, env *env) glObj {
+func evalLet(args []GLObject, env *env) GLObject {
 	if len(args) < 2 {
-		return glErr{errors.New("let expects at least two arguments")}
+		return GLError{errors.New("let expects at least two arguments")}
 	}
 	local := newEnv(env)
 	params, targ := args[:len(args)-1], args[len(args)-1]
 	for _, param := range params {
-		tup, ok := param.(glList)
+		tup, ok := param.(GLList)
 		if !ok || len(tup.items) != 2 {
-			return glErr{errors.New("expected a list of two items")}
+			return GLError{errors.New("expected a list of two items")}
 		}
-		sym, ok := tup.items[0].(glSym)
+		sym, ok := tup.items[0].(GLSymbol)
 		if !ok {
-			return glErr{errors.New("expected a symbol")}
+			return GLError{errors.New("expected a symbol")}
 		}
-		val := eval(tup.items[1], env)
-		if err, ok := val.(glErr); ok {
+		val := Eval(tup.items[1], env)
+		if err, ok := val.(GLError); ok {
 			return err
 		}
 		local.set(sym.name, val)
 	}
-	return eval(targ, local)
+	return Eval(targ, local)
 }
 
-func evalDo(args []glObj, env *env) glObj {
-	var res glObj
+func evalDo(args []GLObject, env *env) GLObject {
+	var res GLObject
 	for _, arg := range args {
-		res = eval(arg, env)
-		if err, ok := res.(glErr); ok {
+		res = Eval(arg, env)
+		if err, ok := res.(GLError); ok {
 			return err
 		}
 	}
 	return res
 }
 
-func evalIf(args []glObj, env *env) glObj {
+func evalIf(args []GLObject, env *env) GLObject {
 	if argc := len(args); argc != 2 && argc != 3 {
-		return glErr{errors.New("if expects two or three arguments)")}
+		return GLError{errors.New("if expects two or three arguments)")}
 	}
-	arg0 := eval(args[0], env)
-	cond, ok := arg0.(glBool)
+	arg0 := Eval(args[0], env)
+	cond, ok := arg0.(GLBool)
 	if !ok {
-		return glErr{errors.New("expected a bool as a condition")}
+		return GLError{errors.New("expected a bool as a condition")}
 	}
 	if cond.val {
-		return eval(args[1], env)
+		return Eval(args[1], env)
 	}
 	if len(args) == 3 {
-		return eval(args[2], env)
+		return Eval(args[2], env)
 	}
-	return glNil{}
+	return GLNil{}
 }
 
-func evalFn(args []glObj, env *env) glObj {
+func evalFn(args []GLObject, env *env) GLObject {
 	if len(args) != 2 {
-		return glErr{errors.New("fn expects two arguments")}
+		return GLError{errors.New("fn expects two arguments")}
 	}
-	params, ok := args[0].(glList)
+	params, ok := args[0].(GLList)
 	if !ok {
-		return glErr{errors.New("expected a list as parameters")}
+		return GLError{errors.New("expected a list as parameters")}
 	}
 	for _, b := range params.items {
-		if _, ok := b.(glSym); !ok {
-			return glErr{errors.New("expected a list of symbols")}
+		if _, ok := b.(GLSymbol); !ok {
+			return GLError{errors.New("expected a list of symbols")}
 		}
 	}
 	body := args[1]
-	return glFn{func(args ...glObj) glObj {
+	return GLLambda{func(args ...GLObject) GLObject {
 		if len(args) != len(params.items) {
-			return glErr{errors.New("invalid number of arguments")}
+			return GLError{errors.New("invalid number of arguments")}
 		}
 		local := newEnv(env)
 		for i, p := range params.items {
-			local.set(p.(glSym).name, args[i])
+			local.set(p.(GLSymbol).name, args[i])
 		}
-		return eval(body, local)
+		return Eval(body, local)
 	}}
 }

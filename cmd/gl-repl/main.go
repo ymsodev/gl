@@ -8,7 +8,7 @@ import (
 	"github.com/ymsodev/gl"
 )
 
-var runtime *gl.Gl
+var runtime *gl.GL
 
 func init() {
 	runtime = gl.New()
@@ -34,5 +34,5 @@ func run(text string) {
 	// TODO: REPL commands
 
 	val := runtime.Run(text)
-	gl.Print(val)
+	fmt.Println(val.String())
 }

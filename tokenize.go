@@ -4,38 +4,60 @@ import (
 	"unicode"
 )
 
-type tokType string
+type TokenType byte
 
 const (
-	tokLParen tokType = "("
-	tokRParen tokType = ")"
-
-	tokSym tokType = "sym"
-	tokNum tokType = "num"
-	tokStr tokType = "str"
-
-	tokTrue  tokType = "true"
-	tokFalse tokType = "false"
-	tokNil   tokType = "nil"
-
-	tokEof tokType = "eof"
+	TokLeftParen TokenType = iota
+	TokRightParen
+	TokSymbol
+	TokNumber
+	TokString
+	TokTrue
+	TokFalse
+	TokNil
+	TokEof
 )
 
-var reserved = map[string]tokType{
-	"true":  tokTrue,
-	"false": tokFalse,
-	"nil":   tokNil,
+func (t TokenType) String() string {
+	switch t {
+	case TokLeftParen:
+		return "("
+	case TokRightParen:
+		return ")"
+	case TokSymbol:
+		return "symbol"
+	case TokNumber:
+		return "number"
+	case TokString:
+		return "string"
+	case TokTrue:
+		return "true"
+	case TokFalse:
+		return "false"
+	case TokNil:
+		return "nil"
+	case TokEof:
+		return "EOF"
+	default:
+		return "<invalid>"
+	}
 }
 
-type token struct {
-	typ   tokType
+var keywords = map[string]TokenType{
+	"true":  TokTrue,
+	"false": TokFalse,
+	"nil":   TokNil,
+}
+
+type Token struct {
+	typ   TokenType
 	line  int
 	start int
 	end   int
 	text  string
 }
 
-func lex(src string) []*token {
+func Tokenize(src string) []*Token {
 	return newLexer(src).lex()
 }
 
@@ -45,7 +67,7 @@ type lexer struct {
 	line   int
 	start  int
 	curr   int
-	tokens []*token
+	tokens []*Token
 }
 
 func newLexer(src string) *lexer {
@@ -55,25 +77,25 @@ func newLexer(src string) *lexer {
 		line:   0,
 		start:  0,
 		curr:   0,
-		tokens: []*token{},
+		tokens: []*Token{},
 	}
 }
 
-func (l *lexer) lex() []*token {
+func (l *lexer) lex() []*Token {
 	for !l.eof() {
 		l.scan()
 		l.start = l.curr
 	}
-	l.token(tokEof)
+	l.token(TokEof)
 	return l.tokens
 }
 
 func (l *lexer) scan() {
 	switch r := l.next(); r {
 	case '(':
-		l.token(tokLParen)
+		l.token(TokLeftParen)
 	case ')':
-		l.token(tokRParen)
+		l.token(TokRightParen)
 	case ';':
 		l.comment()
 	case '"':
@@ -82,7 +104,7 @@ func (l *lexer) scan() {
 		if unicode.IsDigit(l.peek()) {
 			l.number()
 		} else {
-			l.token(tokSym)
+			l.token(TokSymbol)
 		}
 	default:
 		switch {
@@ -111,7 +133,7 @@ func (l *lexer) string() {
 		}
 	}
 	l.next()
-	l.token(tokStr)
+	l.token(TokString)
 }
 
 func (l *lexer) number() {
@@ -120,7 +142,7 @@ func (l *lexer) number() {
 		l.next()
 		l.digits()
 	}
-	l.token(tokNum)
+	l.token(TokNumber)
 }
 
 func (l *lexer) digits() {
@@ -133,15 +155,15 @@ func (l *lexer) symbol() {
 	for !l.eof() && unicode.In(l.peek(), unicode.PrintRanges...) && l.peek() != '(' && l.peek() != ')' {
 		l.next()
 	}
-	typ := tokSym
-	if k, ok := reserved[l.text()]; ok {
+	typ := TokSymbol
+	if k, ok := keywords[l.text()]; ok {
 		typ = k
 	}
 	l.token(typ)
 }
 
-func (l *lexer) token(typ tokType) {
-	l.tokens = append(l.tokens, &token{
+func (l *lexer) token(typ TokenType) {
+	l.tokens = append(l.tokens, &Token{
 		typ:   typ,
 		line:  l.line,
 		start: l.start,
