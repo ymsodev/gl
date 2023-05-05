@@ -1,2 +1,7 @@
-# gl
-Lisp interpreter written in Go
+<div align=center>
+
+# ʕʕʕ• ϖ •ʔʔʔ
+
+**gopher lisp**
+
+</div>
