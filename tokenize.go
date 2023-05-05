@@ -92,9 +92,9 @@ func (l *lexer) lex() []*Token {
 
 func (l *lexer) scan() {
 	switch r := l.next(); r {
-	case '(':
+	case '(', 'ʕ':
 		l.token(TokLeftParen)
-	case ')':
+	case ')', 'ʔ':
 		l.token(TokRightParen)
 	case ';':
 		l.comment()

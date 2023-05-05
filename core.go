@@ -16,7 +16,7 @@ type Namespace struct {
 }
 
 func (n *Namespace) Set(sym GLSymbol, fn GLFunction) {
-	n.m[]
+	n.m[sym.name] = fn
 }
 
 func Print(args ...GLObject) GLObject {

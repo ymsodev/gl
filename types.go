@@ -17,7 +17,7 @@ type GLSymbol struct{ name string }
 type GLBool struct{ val bool }
 type GLNumber struct{ val float64 }
 type GLString struct{ val string }
-type GLError struct{ err error }
+type GLError struct{ val error }
 type GLFunction struct{ fn func(...GLObject) GLObject }
 type GLList struct{ items []GLObject }
 
@@ -35,17 +35,21 @@ func (g GLSymbol) String() string   { return fmt.Sprintf("<%s>", g.name) }
 func (g GLBool) String() string     { return strconv.FormatBool(g.val) }
 func (g GLNumber) String() string   { return strconv.FormatFloat(g.val, 'f', -1, 64) }
 func (g GLString) String() string   { return strconv.Quote(g.val) }
-func (g GLError) String() string    { return "nil" }
+func (g GLError) String() string    { return fmt.Sprintf("error: %v", g.val) }
 func (g GLFunction) String() string { return "<function>" }
 func (g GLList) String() string {
 	var b strings.Builder
-	b.WriteRune('(')
-	for i, item := range g.items {
-		b.WriteString(item.String())
-		if i != len(g.items)-1 {
+	b.WriteRune('ʕ')
+	for i := range g.items {
+		if i != 0 {
 			b.WriteRune(' ')
 		}
+		b.WriteString(g.items[i].String())
 	}
-	b.WriteRune(')')
+	b.WriteRune('ʔ')
 	return b.String()
+}
+
+func (g GLError) Error() string {
+	return g.val.Error()
 }
