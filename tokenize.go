@@ -7,8 +7,8 @@ import (
 type TokenType byte
 
 const (
-	TokLeftParen TokenType = iota
-	TokRightParen
+	TokLParen TokenType = iota
+	TokRParen
 	TokSymbol
 	TokNumber
 	TokString
@@ -20,9 +20,9 @@ const (
 
 func (t TokenType) String() string {
 	switch t {
-	case TokLeftParen:
+	case TokLParen:
 		return "("
-	case TokRightParen:
+	case TokRParen:
 		return ")"
 	case TokSymbol:
 		return "symbol"
@@ -50,14 +50,11 @@ var keywords = map[string]TokenType{
 }
 
 type Token struct {
-	typ   TokenType
-	line  int
-	start int
-	end   int
-	text  string
+	Type    TokenType
+	Literal string
 }
 
-func Tokenize(src string) []*Token {
+func Tokenize(src string) []Token {
 	return newLexer(src).lex()
 }
 
@@ -67,7 +64,7 @@ type lexer struct {
 	line   int
 	start  int
 	curr   int
-	tokens []*Token
+	tokens []Token
 }
 
 func newLexer(src string) *lexer {
@@ -77,11 +74,11 @@ func newLexer(src string) *lexer {
 		line:   0,
 		start:  0,
 		curr:   0,
-		tokens: []*Token{},
+		tokens: []Token{},
 	}
 }
 
-func (l *lexer) lex() []*Token {
+func (l *lexer) lex() []Token {
 	for !l.eof() {
 		l.scan()
 		l.start = l.curr
@@ -92,10 +89,10 @@ func (l *lexer) lex() []*Token {
 
 func (l *lexer) scan() {
 	switch r := l.next(); r {
-	case '(', 'ʕ':
-		l.token(TokLeftParen)
-	case ')', 'ʔ':
-		l.token(TokRightParen)
+	case '(':
+		l.token(TokLParen)
+	case ')':
+		l.token(TokRParen)
 	case ';':
 		l.comment()
 	case '"':
@@ -152,7 +149,7 @@ func (l *lexer) digits() {
 }
 
 func (l *lexer) symbol() {
-	for !l.eof() && unicode.In(l.peek(), unicode.PrintRanges...) && l.peek() != '(' && l.peek() != ')' {
+	for !l.eof() && validSymbolRune(l.peek()) {
 		l.next()
 	}
 	typ := TokSymbol
@@ -162,13 +159,14 @@ func (l *lexer) symbol() {
 	l.token(typ)
 }
 
-func (l *lexer) token(typ TokenType) {
-	l.tokens = append(l.tokens, &Token{
-		typ:   typ,
-		line:  l.line,
-		start: l.start,
-		end:   l.curr,
-		text:  l.text(),
+func validSymbolRune(r rune) bool {
+	return unicode.In(r, unicode.PrintRanges...) && r != '(' && r != ')'
+}
+
+func (l *lexer) token(tokenType TokenType) {
+	l.tokens = append(l.tokens, Token{
+		Type:    tokenType,
+		Literal: l.text(),
 	})
 }
 

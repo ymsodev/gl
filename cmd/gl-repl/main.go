@@ -12,6 +12,7 @@ var runtime *gl.GL
 
 func init() {
 	runtime = gl.New()
+	runtime.Init()
 }
 
 func main() {

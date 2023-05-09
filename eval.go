@@ -4,11 +4,10 @@ import (
 	"errors"
 )
 
-func Eval(expr GLObject, env *env) GLObject {
+func Eval(expr GLObject, env *Environment) GLObject {
 	switch v := expr.(type) {
 	case GLSymbol:
-		// TODO: maybe just return the error type?
-		res, err := env.get(v.name)
+		res, err := env.Get(v)
 		if err != nil {
 			return GLError{err}
 		}
@@ -19,7 +18,7 @@ func Eval(expr GLObject, env *env) GLObject {
 	return expr
 }
 
-func evalList(l GLList, env *env) GLObject {
+func evalList(l GLList, env *Environment) GLObject {
 	if len(l.items) == 0 {
 		return GLNil{}
 	}
@@ -49,15 +48,15 @@ func evalList(l GLList, env *env) GLObject {
 	return apply(vals, env)
 }
 
-func apply(items []GLObject, env *env) GLObject {
-	lambda, args := items[0], items[1:]
-	if lambda, ok := lambda.(GLFunction); ok {
-		return lambda.fn(args...)
+func apply(items []GLObject, env *Environment) GLObject {
+	f, args := items[0], items[1:]
+	if f, ok := f.(GLFunction); ok {
+		return f.fn(args...)
 	}
 	return GLList{items}
 }
 
-func evalDef(args []GLObject, env *env) GLObject {
+func evalDef(args []GLObject, env *Environment) GLObject {
 	if len(args) != 2 {
 		return GLError{errors.New("def expects two arguments")}
 	}
@@ -69,15 +68,15 @@ func evalDef(args []GLObject, env *env) GLObject {
 	if err, ok := val.(GLError); ok {
 		return err
 	}
-	env.set(sym.name, val)
+	env.Set(sym, val)
 	return val
 }
 
-func evalLet(args []GLObject, env *env) GLObject {
+func evalLet(args []GLObject, env *Environment) GLObject {
 	if len(args) < 2 {
 		return GLError{errors.New("let expects at least two arguments")}
 	}
-	local := newEnv(env)
+	local := NewEnvironment(env)
 	params, targ := args[:len(args)-1], args[len(args)-1]
 	for _, param := range params {
 		tup, ok := param.(GLList)
@@ -92,12 +91,12 @@ func evalLet(args []GLObject, env *env) GLObject {
 		if err, ok := val.(GLError); ok {
 			return err
 		}
-		local.set(sym.name, val)
+		local.Set(sym, val)
 	}
 	return Eval(targ, local)
 }
 
-func evalDo(args []GLObject, env *env) GLObject {
+func evalDo(args []GLObject, env *Environment) GLObject {
 	var res GLObject
 	for _, arg := range args {
 		res = Eval(arg, env)
@@ -108,7 +107,7 @@ func evalDo(args []GLObject, env *env) GLObject {
 	return res
 }
 
-func evalIf(args []GLObject, env *env) GLObject {
+func evalIf(args []GLObject, env *Environment) GLObject {
 	if argc := len(args); argc != 2 && argc != 3 {
 		return GLError{errors.New("if expects two or three arguments)")}
 	}
@@ -126,7 +125,7 @@ func evalIf(args []GLObject, env *env) GLObject {
 	return GLNil{}
 }
 
-func evalFn(args []GLObject, env *env) GLObject {
+func evalFn(args []GLObject, env *Environment) GLObject {
 	if len(args) != 2 {
 		return GLError{errors.New("fn expects two arguments")}
 	}
@@ -144,9 +143,9 @@ func evalFn(args []GLObject, env *env) GLObject {
 		if len(args) != len(params.items) {
 			return GLError{errors.New("invalid number of arguments")}
 		}
-		local := newEnv(env)
+		local := NewEnvironment(env)
 		for i, p := range params.items {
-			local.set(p.(GLSymbol).name, args[i])
+			local.Set(p.(GLSymbol), args[i])
 		}
 		return Eval(body, local)
 	}}

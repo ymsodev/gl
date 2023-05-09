@@ -11,13 +11,7 @@ var (
 	errInvalidArgType = GLError{errors.New("invalid argument type")}
 )
 
-type Namespace struct {
-	m map[string]GLFunction
-}
-
-func (n *Namespace) Set(sym GLSymbol, fn GLFunction) {
-	n.m[sym.name] = fn
-}
+type Namespace map[GLSymbol]GLFunction
 
 func Print(args ...GLObject) GLObject {
 	var b strings.Builder

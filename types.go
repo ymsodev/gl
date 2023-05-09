@@ -39,14 +39,14 @@ func (g GLError) String() string    { return fmt.Sprintf("error: %v", g.val) }
 func (g GLFunction) String() string { return "<function>" }
 func (g GLList) String() string {
 	var b strings.Builder
-	b.WriteRune('ʕ')
+	b.WriteRune('(')
 	for i := range g.items {
 		if i != 0 {
 			b.WriteRune(' ')
 		}
 		b.WriteString(g.items[i].String())
 	}
-	b.WriteRune('ʔ')
+	b.WriteRune(')')
 	return b.String()
 }
 

@@ -1,21 +1,25 @@
 package gl
 
 type GL struct {
-	env *env
+	ns  Namespace
+	env *Environment
 }
 
 func New() *GL {
 	return &GL{
-		&env{
-			nil,
-			map[string]GLObject{
-				"print": GLFunction{Print},
-				"+":     GLFunction{Add},
-				"-":     GLFunction{Subtract},
-				"*":     GLFunction{Multiply},
-				"/":     GLFunction{Divide},
-			},
+		ns: Namespace{
+			GLSymbol{"+"}: GLFunction{Add},
+			GLSymbol{"-"}: GLFunction{Subtract},
+			GLSymbol{"*"}: GLFunction{Multiply},
+			GLSymbol{"/"}: GLFunction{Divide},
 		},
+		env: NewEnvironment(nil),
+	}
+}
+
+func (gl *GL) Init() {
+	for sym, fn := range gl.ns {
+		gl.env.Set(sym, fn)
 	}
 }
 

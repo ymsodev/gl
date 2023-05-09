@@ -4,20 +4,20 @@ import (
 	"fmt"
 )
 
-type Env struct {
-	outer *Env
-	data  map[string]GLObject
+type Environment struct {
+	outer *Environment
+	data  map[GLSymbol]GLObject
 }
 
-func NewEnv(outer *Env) *Env {
-	return &Env{outer, make(map[string]GLObject)}
+func NewEnvironment(outer *Environment) *Environment {
+	return &Environment{outer, make(map[GLSymbol]GLObject)}
 }
 
-func (e *Env) Set(sym string, val GLObject) {
+func (e *Environment) Set(sym GLSymbol, val GLObject) {
 	e.data[sym] = val
 }
 
-func (e *Env) Get(sym string) (GLObject, error) {
+func (e *Environment) Get(sym GLSymbol) (GLObject, error) {
 	if res, ok := e.data[sym]; ok {
 		return res, nil
 	}
