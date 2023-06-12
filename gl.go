@@ -8,10 +8,14 @@ type GL struct {
 func New() *GL {
 	return &GL{
 		ns: Namespace{
-			GLSymbol{"+"}: GLFunction{Add},
-			GLSymbol{"-"}: GLFunction{Subtract},
-			GLSymbol{"*"}: GLFunction{Multiply},
-			GLSymbol{"/"}: GLFunction{Divide},
+			GLSymbol{"+"}:     GLFunction{Add},
+			GLSymbol{"-"}:     GLFunction{Subtract},
+			GLSymbol{"*"}:     GLFunction{Multiply},
+			GLSymbol{"/"}:     GLFunction{Divide},
+			GLSymbol{"print"}: GLFunction{Print},
+			GLSymbol{"list"}:  GLFunction{List},
+			GLSymbol{"list?"}: GLFunction{CheckList},
+			GLSymbol{"len"}:   GLFunction{Count},
 		},
 		env: NewEnvironment(nil),
 	}

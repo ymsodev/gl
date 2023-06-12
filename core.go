@@ -96,3 +96,32 @@ func Divide(args ...GLObject) GLObject {
 	}
 	return res
 }
+
+func List(args ...GLObject) GLObject {
+	return GLList{args}
+}
+
+func CheckList(args ...GLObject) GLObject {
+	if len(args) != 1 {
+		return GLError{errors.New("expected 1 argument")}
+	}
+	_, ok := args[0].(GLList)
+	return GLBool{ok}
+}
+
+func Len(args ...GLObject) GLObject {
+	if len(args) != 1 {
+		return GLError{errors.New("expected 1 argument")}
+	}
+	l, ok := args[0].(GLList)
+	if !ok {
+		return GLError{errors.New("expected a list as argument")}
+	}
+	return GLNumber{float64(len(l.items))}
+}
+
+func Equal(args ...GLObject) GLObject {
+	if len(args) != 2 {
+		return GLError{errors.New("expected 2 arguments")}
+	}
+}
